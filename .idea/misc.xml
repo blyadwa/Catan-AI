@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="sdkName" value="fantastic-waffle" />
+  </component>
+  <component name="GithubDefaultAccount">
+    <option name="defaultAccountId" value="9753322e-0b7a-42fc-b668-728d25e785b7" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="fantastic-waffle" project-jdk-type="Python SDK" />
+</project>
