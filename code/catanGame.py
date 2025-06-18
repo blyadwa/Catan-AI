@@ -18,7 +18,7 @@ class catanGame():
 
         #Game State variables
         self.gameOver = False
-        self.maxPoints = 8
+        self.maxPoints = 10
         self.numPlayers = 0
 
         while(self.numPlayers not in [3,4]): #Only accept 3 and 4 player games
