@@ -256,6 +256,8 @@ class catanAIGame():
                     currPlayer.move(self.board, self) #AI Player makes all its moves
                     #Check if AI player gets longest road and update Victory points
                     self.check_longest_road(currPlayer)
+                    #Also update Largest Army status in case a knight was played
+                    self.check_largest_army(currPlayer)
                     print("Player:{}, Resources:{}, Points: {}".format(currPlayer.name, currPlayer.resources, currPlayer.victoryPoints))
                     
                     self.boardView.displayGameScreen()#Update back to original gamescreen
