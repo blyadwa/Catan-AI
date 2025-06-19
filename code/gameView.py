@@ -175,8 +175,8 @@ class catanGameView():
 
 
 
-    #Function to display the gameState board - use to display intermediate build screens
-    #gameScreenState specifies which type of screen is to be shown
+    #Function to display the base game board and UI
+    #Trading and other overlay screens call this to redraw the board
     def displayGameScreen(self):
         #First display all initial hexes and regular buttons
         self.displayInitialBoard()
@@ -196,7 +196,6 @@ class catanGameView():
 
         pygame.display.update()
         return
-        #TO-DO Add screens for trades
 
 
     #Function to display dice roll
