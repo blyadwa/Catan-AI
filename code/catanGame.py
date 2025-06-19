@@ -114,7 +114,8 @@ class catanGame():
 
             roadToBuild = self.boardView.buildRoad_display(player, potentialRoadDict)
             if(roadToBuild != None):
-                player.build_road(roadToBuild[0], roadToBuild[1], self.board)
+                player.build_road(roadToBuild[0], roadToBuild[1], self.board,
+                                 free=self.gameSetup)
 
             
         if(build_flag == 'SETTLE'): #Show screen with potential settlements
@@ -125,7 +126,8 @@ class catanGame():
             
             vertexSettlement = self.boardView.buildSettlement_display(player, potentialVertexDict)
             if(vertexSettlement != None):
-                player.build_settlement(vertexSettlement, self.board) 
+                player.build_settlement(vertexSettlement, self.board,
+                                       free=self.gameSetup)
 
         if(build_flag == 'CITY'): 
             potentialCityVertexDict = self.board.get_potential_cities(player)

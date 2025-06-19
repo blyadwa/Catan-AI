@@ -56,13 +56,16 @@ class heuristicAIPlayer(player):
             if(resourceType not in self.setupResources and resourceType != 'DESERT'):
                 self.setupResources.append(resourceType)
 
-        self.build_settlement(vertexToBuild, board)
+        #Free placement during initial setup
+        self.build_settlement(vertexToBuild, board, free=True)
 
 
         #Build random road
         possibleRoads = board.get_setup_roads(self)
         randomEdge = np.random.randint(0, len(possibleRoads.keys()))
-        self.build_road(list(possibleRoads.keys())[randomEdge][0], list(possibleRoads.keys())[randomEdge][1], board)
+        self.build_road(list(possibleRoads.keys())[randomEdge][0],
+                        list(possibleRoads.keys())[randomEdge][1],
+                        board, free=True)
 
     
     def move(self, board):
