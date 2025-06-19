@@ -287,10 +287,10 @@ class catanAIGame():
 
                 while(turnOver == False):
 
-                    #TO-DO: Add logic for AI Player to move
-                    #TO-DO: Add option of AI Player playing a dev card prior to dice roll
-                    
-                    #Roll Dice and update player resources and dice stats
+                    # AI players can choose to play a development card before rolling
+                    currPlayer.heuristic_play_dev_card(self.board, self)
+
+                    # Roll Dice and update player resources and dice stats
                     pygame.event.pump()
                     diceNum = self.rollDice()
                     diceRolled = True
@@ -298,7 +298,8 @@ class catanAIGame():
                     self.diceStats[diceNum] += 1
                     self.diceStats_list.append(diceNum)
 
-                    currPlayer.move(self.board, self) #AI Player makes all its moves
+                    # Perform regular turn actions
+                    currPlayer.move(self.board, self)
                     #Check if AI player gets longest road and update Victory points
                     self.check_longest_road(currPlayer)
                     #Also update Largest Army status in case a knight was played

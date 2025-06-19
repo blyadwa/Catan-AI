@@ -182,24 +182,117 @@ class heuristicAIPlayer(player):
         return
 
 
-    # def heuristic_play_dev_card(self, board):
-    #     '''Heuristic strategies to choose and play a dev card
-    #     args: board object
-    #     '''
-    #     #Check if player can play a devCard this turn
-    #     if self.devCardPlayedThisTurn != True:
-    #         #Get a list of all the unique dev cards this player can play
-    #         devCardsAvailable = []
-    #         for cardName, cardAmount in self.devCards.items():
-    #             if(cardName != 'VP' and cardAmount >= 1): #Exclude Victory points
-    #                 devCardsAvailable.append((cardName, cardAmount))
+    def heuristic_play_dev_card(self, board, game=None):
+        """Play a development card using simple heuristics.
 
-    #         if(len(devCardsAvailable) >=1):
-                #If a hexTile is currently blocked, try and play a Knight
+        Parameters
+        ----------
+        board : ``catanBoard``
+            Current game board.
+        game : game instance, optional
+            Needed for actions that modify global game state such as
+            checking largest army or longest road. ``None`` is allowed
+            for testing.
+        """
 
-                #If expansion needed, try road-builder
+        if self.devCardPlayedThisTurn:
+            return False
 
-                #If resources needed, try monopoly or year of plenty
+        # List available development cards excluding VP cards
+        available = {
+            k: v for k, v in self.devCards.items() if k != "VP" and v > 0
+        }
+        if not available:
+            return False
+
+        # --------------------------------------------------
+        # Knight card: play if robber is blocking one of our tiles or
+        # if we have spare knights to try for Largest Army
+        # --------------------------------------------------
+        if self.devCards["KNIGHT"] > 0:
+            robber_blocking = False
+            for v in (
+                self.buildGraph["SETTLEMENTS"] + self.buildGraph["CITIES"]
+            ):
+                for h in board.boardGraph[v].adjacentHexList:
+                    if board.hexTileDict[h].robber:
+                        robber_blocking = True
+                        break
+                if robber_blocking:
+                    break
+
+            if robber_blocking or self.devCards["KNIGHT"] > 1:
+                self.devCards["KNIGHT"] -= 1
+                self.devCardPlayedThisTurn = True
+                self.knightsPlayed += 1
+                self.heuristic_move_robber(board)
+                if game is not None:
+                    game.check_largest_army(self)
+                return True
+
+        # --------------------------------------------------
+        # Road Builder: attempt to expand for free if any road is available
+        # --------------------------------------------------
+        if self.devCards["ROADBUILDER"] > 0:
+            potential = board.get_potential_roads(self)
+            if potential:
+                self.devCards["ROADBUILDER"] -= 1
+                self.devCardPlayedThisTurn = True
+                for _ in range(2):
+                    potential = board.get_potential_roads(self)
+                    if not potential:
+                        break
+                    edge = list(potential.keys())[np.random.randint(0, len(potential))]
+                    self.build_road(edge[0], edge[1], board, free=True)
+                if game is not None:
+                    game.check_longest_road(self)
+                return True
+
+        # --------------------------------------------------
+        # Year of Plenty: grab resources needed for settlement/city
+        # --------------------------------------------------
+        if self.devCards["YEAROFPLENTY"] > 0:
+            needed = self.resources_needed_for_city()
+            settle_need = self.resources_needed_for_settlement()
+            for r, a in settle_need.items():
+                if r not in needed:
+                    needed[r] = a
+            if needed:
+                self.devCards["YEAROFPLENTY"] -= 1
+                self.devCardPlayedThisTurn = True
+                choices = list(needed.keys())
+                # Pick up to two different needed resources
+                r1 = choices[0]
+                if board.withdraw_resource(r1):
+                    self.resources[r1] += 1
+                r2 = choices[1] if len(choices) > 1 else choices[0]
+                if board.withdraw_resource(r2):
+                    self.resources[r2] += 1
+                return True
+
+        # --------------------------------------------------
+        # Monopoly: take the most common resource among opponents
+        # --------------------------------------------------
+        if self.devCards["MONOPOLY"] > 0 and game is not None:
+            counts = {r: 0 for r in self.resources.keys()}
+            for p in list(game.playerQueue.queue):
+                if p == self:
+                    continue
+                for r, amt in p.resources.items():
+                    counts[r] += amt
+            resource = max(counts, key=counts.get)
+            if counts[resource] > 0:
+                self.devCards["MONOPOLY"] -= 1
+                self.devCardPlayedThisTurn = True
+                for p in list(game.playerQueue.queue):
+                    if p == self:
+                        continue
+                    amt = p.resources[resource]
+                    p.resources[resource] = 0
+                    self.resources[resource] += amt
+                return True
+
+        return False
 
 
     def resources_needed_for_settlement(self):
