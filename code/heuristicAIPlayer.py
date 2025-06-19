@@ -342,22 +342,140 @@ class heuristicAIPlayer(player):
 
         return
 
-    #Function to propose a trade -> give r1 and get r2
-    #Propose a trade as a dictionary with {r1:amt_1, r2: amt_2} specifying the trade
-    #def propose_trade_with_players(self):
-    
+    # Function to propose a simple trade with other players
+    # Currently a 1-for-1 offer where this player gives one of an
+    # "abundant" resource (quantity >= 2) in exchange for a resource we lack.
+    # ``players`` should be an iterable of other players in the game.
+    def propose_trade_with_players(self, players):
+        abundants = [r for r, a in self.resources.items() if a >= 2]
+        needs = [r for r, a in self.resources.items() if a == 0]
 
-    #Function to accept/reject trade - return True if accept
-    #def accept_trade(self, r1_dict, r2_dict):
-        
+        for needed in needs:
+            for abundant in abundants:
+                for p in players:
+                    if p == self:
+                        continue
+                    if (
+                        p.resources.get(needed, 0) > 0
+                        and p.resources.get(abundant, 0) < 2
+                    ):
+                        return p, {abundant: 1}, {needed: 1}
 
-    #Function to find best action - based on gamestate
-    def get_action(self):
-        return
+        return None
 
-    #Function to execute the player's action
-    def execute_action(self):
-        return
+    # Function to accept/reject a proposed trade.
+    # ``offer_dict`` are the resources received, ``request_dict`` are the
+    # resources we must give away.  Returns ``True`` if accepted.
+    def accept_trade(self, offer_dict, request_dict):
+        # Ensure we have the resources requested
+        for r, amt in request_dict.items():
+            if self.resources.get(r, 0) < amt:
+                return False
+
+        # Heuristic: accept if we receive a resource we currently have none of
+        for r in offer_dict:
+            if self.resources.get(r, 0) == 0:
+                return True
+
+        # Otherwise accept if we have plenty of the requested resource
+        for r, amt in request_dict.items():
+            if self.resources.get(r, 0) - amt < 2:
+                return False
+
+        return True
+
+
+    # Function to decide a basic action for this turn based purely on resources
+    # Returns a tuple describing the action.
+    # Possible actions are:
+    #   ('BUILD_CITY',)
+    #   ('BUILD_SETTLEMENT',)
+    #   ('BUILD_ROAD',)
+    #   ('TRADE_PLAYER', player, offer, request)
+    #   ('PASS',)
+    def get_action(self, players=None):
+        if self.resources['ORE'] >= 3 and self.resources['WHEAT'] >= 2:
+            return ('BUILD_CITY',)
+
+        if (
+            self.resources['BRICK'] >= 1
+            and self.resources['WOOD'] >= 1
+            and self.resources['SHEEP'] >= 1
+            and self.resources['WHEAT'] >= 1
+        ):
+            return ('BUILD_SETTLEMENT',)
+
+        if self.resources['BRICK'] >= 1 and self.resources['WOOD'] >= 1:
+            return ('BUILD_ROAD',)
+
+        if players is not None:
+            proposal = self.propose_trade_with_players(players)
+            if proposal is not None:
+                return ('TRADE_PLAYER',) + proposal
+
+        return ('PASS',)
+
+    # Execute a chosen action.  ``board`` can be ``None`` to run in tests where
+    # no board is available.  When a board is provided the respective player
+    # helper methods are used, otherwise resources are manipulated directly.
+    def execute_action(self, action, board=None):
+        atype = action[0]
+
+        if atype == 'BUILD_CITY':
+            if board is not None:
+                potential = board.get_potential_cities(self)
+                if potential:
+                    v = list(potential.keys())[0]
+                    self.build_city(v, board)
+                    return True
+            else:
+                if self.resources['ORE'] >= 3 and self.resources['WHEAT'] >= 2:
+                    self.resources['ORE'] -= 3
+                    self.resources['WHEAT'] -= 2
+                    self.victoryPoints += 1
+                    return True
+
+        elif atype == 'BUILD_SETTLEMENT':
+            if board is not None:
+                potential = board.get_potential_settlements(self)
+                if potential:
+                    v = list(potential.keys())[0]
+                    self.build_settlement(v, board)
+                    return True
+            else:
+                if (
+                    self.resources['BRICK'] >= 1
+                    and self.resources['WOOD'] >= 1
+                    and self.resources['SHEEP'] >= 1
+                    and self.resources['WHEAT'] >= 1
+                ):
+                    self.resources['BRICK'] -= 1
+                    self.resources['WOOD'] -= 1
+                    self.resources['SHEEP'] -= 1
+                    self.resources['WHEAT'] -= 1
+                    self.victoryPoints += 1
+                    return True
+
+        elif atype == 'BUILD_ROAD':
+            if board is not None:
+                potential = board.get_potential_roads(self)
+                if potential:
+                    e = list(potential.keys())[0]
+                    self.build_road(e[0], e[1], board)
+                    return True
+            else:
+                if self.resources['BRICK'] >= 1 and self.resources['WOOD'] >= 1:
+                    self.resources['BRICK'] -= 1
+                    self.resources['WOOD'] -= 1
+                    return True
+
+        elif atype == 'TRADE_PLAYER':
+            _, other, offer, request = action
+            give_res = list(offer.keys())[0]
+            receive_res = list(request.keys())[0]
+            return self.trade_with_player(other, give_res, receive_res)
+
+        return False
 
 
 
