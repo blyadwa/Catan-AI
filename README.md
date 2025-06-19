@@ -11,12 +11,25 @@ Install the required Python packages using pip:
 pip install -r requirements.txt
 ```
 
+## Running the Game
+
+Start a new game with a mix of human and AI players:
+```bash
+python code/catanGame.py
+```
+You will be prompted to select the number of players and whether each one is human or AI.
+
+To watch AI players compete automatically, run:
+```bash
+python code/AIGame.py
+```
+
 ## Framework Overview
 Game functionality is implemented in the following modules:
 1. ```hexTile.py``` - Implements the hexagonal tiles for the Catan board, with a complete graph representation outline for vertices and edges. Mathematical representation easy drawing of hexagonal grids and pixel math is implemented in ```hexLib.py```, adapted from  http://www.redblobgames.com/grids/hexagons/
 2. ```board.py``` - Base class to implement the board, and board related functionality such as building roads, settlements and cities. 
 3. ```player.py``` and ```heuristicAIPlayer.py``` - Base classes to implement player functionality. The AI Player inherits the player class and enacts heuristic strategies
-4. ```catanGame.py``` and ```AIGame.py``` - Wrapper classes to interface game representation with GUI. When launching `catanGame.py` you can specify whether each participant is a human or AI player.
+4. ```catanGame.py``` and ```AIGame.py``` - Wrapper classes to interface game representation with the GUI. Run `python code/catanGame.py` to start a game and choose which participants are human or AI. For a fully automated match launch `python code/AIGame.py`.
 5. ```gameView.py``` - Graphics class implemented to interface game mechanics with pygame-based GUI.
 
 
