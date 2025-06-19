@@ -183,7 +183,13 @@ class catanAIGame():
                         player_i.resources[resource] += qty
                         print("{} collects {} {}".format(player_i.name, qty, resource))
 
-                print("Player:{}, Resources:{}, Points: {}".format(player_i.name, player_i.resources, player_i.victoryPoints))
+                print(
+                    "Player:{}, Resources:{}, Points: {}".format(
+                        player_i.name,
+                        player_i.resources,
+                        player_i.visibleVictoryPoints,
+                    )
+                )
                 print('MaxRoadLength:{}, Longest Road:{}\n'.format(player_i.maxRoadLength, player_i.longestRoadFlag))
         
         else:
@@ -193,27 +199,47 @@ class catanAIGame():
 
     #function to check if a player has the longest road - after building latest road
     def check_longest_road(self, player_i):
-        if(player_i.maxRoadLength >= 5): #Only eligible if road length is at least 5
-            longestRoad = True
-            for p in list(self.playerQueue.queue):
-                if(p.maxRoadLength >= player_i.maxRoadLength and p != player_i): #Check if any other players have a longer road
-                    longestRoad = False
-            
-            if(longestRoad and player_i.longestRoadFlag == False): #if player_i takes longest road and didn't already have longest road
-                #Set previous players flag to false and give player_i the longest road points
-                prevPlayer = ''
-                for p in list(self.playerQueue.queue):
-                    if(p.longestRoadFlag):
-                        p.longestRoadFlag = False
-                        p.victoryPoints -= 2
-                        p.update_visible_vp()
-                        prevPlayer = 'from Player ' + p.name
-    
-                player_i.longestRoadFlag = True
-                player_i.victoryPoints += 2
-                player_i.update_visible_vp()
+        """Evaluate and assign the Longest Road bonus."""
+        players = list(self.playerQueue.queue)
 
-                print("Player {} takes Longest Road {}".format(player_i.name, prevPlayer))
+        max_len = max(p.maxRoadLength for p in players)
+        contenders = [p for p in players if p.maxRoadLength == max_len and max_len >= 5]
+
+        current_holder = None
+        for p in players:
+            if p.longestRoadFlag:
+                current_holder = p
+                break
+
+        if len(contenders) != 1:
+            if current_holder is not None:
+                current_holder.longestRoadFlag = False
+                current_holder.victoryPoints -= 2
+                current_holder.update_visible_vp()
+            for p in players:
+                if p != current_holder:
+                    p.longestRoadFlag = False
+            return
+
+        winner = contenders[0]
+        if current_holder == winner:
+            return
+
+        if current_holder is not None:
+            current_holder.longestRoadFlag = False
+            current_holder.victoryPoints -= 2
+            current_holder.update_visible_vp()
+
+        for p in players:
+            if p != winner:
+                p.longestRoadFlag = False
+
+        if not winner.longestRoadFlag:
+            winner.longestRoadFlag = True
+            winner.victoryPoints += 2
+            winner.update_visible_vp()
+            prev = f"from Player {current_holder.name}" if current_holder else ''
+            print(f"Player {winner.name} takes Longest Road {prev}")
 
     #function to check if a player has the largest army - after playing latest knight
     def check_largest_army(self, player_i):
@@ -277,7 +303,13 @@ class catanAIGame():
                     self.check_longest_road(currPlayer)
                     #Also update Largest Army status in case a knight was played
                     self.check_largest_army(currPlayer)
-                    print("Player:{}, Resources:{}, Points: {}".format(currPlayer.name, currPlayer.resources, currPlayer.victoryPoints))
+                    print(
+                        "Player:{}, Resources:{}, Points: {}".format(
+                            currPlayer.name,
+                            currPlayer.resources,
+                            currPlayer.visibleVictoryPoints,
+                        )
+                    )
                     
                     self.boardView.displayGameScreen()#Update back to original gamescreen
                     pygame.time.delay(300)
