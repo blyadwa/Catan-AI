@@ -52,6 +52,7 @@ class catanGame():
         #Initialize new players with names and colors. Ask whether each
         #participant is human or AI and only create AI players when selected.
         playerColors = ['black', 'darkslateblue', 'magenta4', 'orange1']
+        players = []
         for i in range(self.numPlayers):
             playerName = input("Enter Player {} name: ".format(i + 1))
             ai_choice = ''
@@ -66,7 +67,30 @@ class catanGame():
             else:
                 new_player = player(playerName, playerColors[i])
 
-            self.playerQueue.put(new_player)
+            players.append(new_player)
+
+        contenders = players[:]
+        while True:
+            highest_roll = -1
+            highest_players = []
+            for p in contenders:
+                roll = np.random.randint(1,7) + np.random.randint(1,7)
+                print(f"{p.name} rolls {roll} for starting order")
+                if roll > highest_roll:
+                    highest_roll = roll
+                    highest_players = [p]
+                elif roll == highest_roll:
+                    highest_players.append(p)
+            if len(highest_players) == 1:
+                start_player = highest_players[0]
+                break
+            print("Tie for highest roll. Rolling again...")
+            contenders = highest_players
+
+        self.playerQueue.put(start_player)
+        for p in players:
+            if p != start_player:
+                self.playerQueue.put(p)
 
         playerList = list(self.playerQueue.queue)
 

@@ -526,9 +526,25 @@ class player():
 
             #Specify quantity to receive
             resource_received_amount = 0
-            while (resource_received_amount > playerToTrade.resources[resourceToReceive]) or (resource_received_amount < 1):
-                resource_received_amount = int(input("Enter quantity of {} to receive from player {}:".format(resourceToReceive, playerToTrade_name)))
+            while (
+                resource_received_amount > playerToTrade.resources[resourceToReceive]
+                or resource_received_amount < 1
+            ):
+                resource_received_amount = int(
+                    input(
+                        "Enter quantity of {} to receive from player {}:".format(
+                            resourceToReceive, playerToTrade_name
+                        )
+                    )
+                )
 
+            #Confirm trade with the other player before executing
+            confirmation = input(
+                f"{playerToTrade_name}, do you accept {self.name}'s offer of {resource_traded_amount} {resourceToTrade} for {resource_received_amount} {resourceToReceive}? (y/n): "
+            ).strip().lower()
+            if confirmation != 'y':
+                print(f"{playerToTrade_name} declined the trade")
+                return
 
             #Execute trade - player gives resource traded and gains resource received
             self.resources[resourceToReceive] += resource_received_amount
@@ -538,8 +554,16 @@ class player():
             playerToTrade.resources[resourceToReceive] -= resource_received_amount
             playerToTrade.resources[resourceToTrade] += resource_traded_amount
 
-            print("Player {} successfully traded {} {} for {} {} with player {}".format(self.name, resource_traded_amount, resourceToTrade,
-                                                                                        resource_received_amount, resourceToReceive, playerToTrade_name))
+            print(
+                "Player {} successfully traded {} {} for {} {} with player {}".format(
+                    self.name,
+                    resource_traded_amount,
+                    resourceToTrade,
+                    resource_received_amount,
+                    resourceToReceive,
+                    playerToTrade_name,
+                )
+            )
 
             return 
 
