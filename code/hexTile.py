@@ -77,3 +77,4 @@ class Vertex():
 # testHex = hexTile(0, Resource('Ore', 8), Point(2,3), [hexTile(2, Resource('Wheat', 11), Point(5,6)), hexTile(3, Resource('Brick', 11), Point(7,4))])
 # testHex.displayHexInfo()
 # testHex.displayHexNeighbors()
+

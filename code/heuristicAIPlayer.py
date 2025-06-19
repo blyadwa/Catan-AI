@@ -18,7 +18,7 @@ class heuristicAIPlayer(player):
 
 
     #Function to build an initial settlement - just choose random spot for now
-    def initial_setup(self, board):
+    def initial_setup(self, board, game=None):
         #Build random settlement
         possibleVertices = board.get_setup_settlements(self)
 
@@ -57,7 +57,10 @@ class heuristicAIPlayer(player):
                 self.setupResources.append(resourceType)
 
         #Free placement during initial setup
-        self.build_settlement(vertexToBuild, board, free=True)
+        built = self.build_settlement(vertexToBuild, board, free=True)
+        if built and game is not None:
+            for p in list(game.playerQueue.queue):
+                game.check_longest_road(p)
 
 
         #Build random road
@@ -68,7 +71,7 @@ class heuristicAIPlayer(player):
                         board, free=True)
 
     
-    def move(self, board):
+    def move(self, board, game=None):
         print("AI Player {} playing...".format(self.name))
         #Trade resources if there are excessive amounts of a particular resource
         self.trade(board)
@@ -76,13 +79,19 @@ class heuristicAIPlayer(player):
         possibleVertices = board.get_potential_settlements(self)
         if(possibleVertices != {} and (self.resources['BRICK'] > 0 and self.resources['WOOD'] > 0 and self.resources['SHEEP'] > 0 and self.resources['WHEAT'] > 0)):
             randomVertex = np.random.randint(0, len(possibleVertices.keys()))
-            self.build_settlement(list(possibleVertices.keys())[randomVertex], board)
+            built = self.build_settlement(list(possibleVertices.keys())[randomVertex], board)
+            if built and game is not None:
+                for p in list(game.playerQueue.queue):
+                    game.check_longest_road(p)
 
         #Build a City
         possibleVertices = board.get_potential_cities(self)
         if(possibleVertices != {} and (self.resources['WHEAT'] >= 2 and self.resources['ORE'] >= 3)):
             randomVertex = np.random.randint(0, len(possibleVertices.keys()))
-            self.build_city(list(possibleVertices.keys())[randomVertex], board)
+            built_city = self.build_city(list(possibleVertices.keys())[randomVertex], board)
+            if built_city and game is not None:
+                for p in list(game.playerQueue.queue):
+                    game.check_longest_road(p)
 
         #Build a couple roads
         for i in range(2):
