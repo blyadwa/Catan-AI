@@ -4,6 +4,13 @@ The GUI is implemented using ```pygame```, while the game log is currently outpu
 
 ![Catan Board](/images/catan_gui.png)
 
+## Installation
+
+Install the required Python packages using pip:
+```bash
+pip install -r requirements.txt
+```
+
 ## Framework Overview
 Game functionality is implemented in the following modules:
 1. ```hexTile.py``` - Implements the hexagonal tiles for the Catan board, with a complete graph representation outline for vertices and edges. Mathematical representation easy drawing of hexagonal grids and pixel math is implemented in ```hexLib.py```, adapted from  http://www.redblobgames.com/grids/hexagons/
