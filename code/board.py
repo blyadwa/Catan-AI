@@ -28,7 +28,8 @@ class catanBoard(hexTile, Vertex):
 
         ##INITIALIZE BOARD##
         print("Initializing Catan Game Board...")
-        self.resourcesList = self.getRandomResourceList() #Assign resources numbers randomly
+        # Randomize the resource distribution; number discs are added later
+        self.resourcesList = self.getRandomResourceList()
 
         #Get a random permutation of indices 0-18 to use with the resource list
         randomIndices = np.random.permutation([i for i in range(len(self.resourcesList))])
@@ -57,6 +58,9 @@ class catanBoard(hexTile, Vertex):
             self.hexTileDict[hexIndex_i] = newHexTile
             hexIndex_i += 1
 
+        # Place the number discs following the A-B-C order
+        self.place_number_discs()
+
         #Create the vertex graph
         self.vertexIndexCount = 0 #initialize vertex index count to 0
         self.generateVertexGraph()
@@ -79,22 +83,19 @@ class catanBoard(hexTile, Vertex):
         return coordDict[hexInd]
 
 
-    #Function to generate a random permutation of resources
+    #Function to generate a random list of resources only
     def getRandomResourceList(self):
+        """Return the resource tiles without number tokens.
+
+        Tiles are drawn randomly when assigned to board positions later."""
         #Define Resources as a dict
         Resource_Dict = {'DESERT':1, 'ORE':3, 'BRICK':3, 'WHEAT':4, 'WOOD':4, 'SHEEP':4}
-        #Get a random permutation of the numbers
-        NumberList = np.random.permutation([2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12])
-        numIndex = 0
 
-        resourceList = [] 
+        resourceList = []
         for r in Resource_Dict.keys():
             numberofResource = Resource_Dict[r]
-            if(r != 'DESERT'):
-                for n in range(numberofResource):
-                    resourceList.append(Resource(r, NumberList[numIndex]))
-                    numIndex += 1
-            else:
+            for _ in range(numberofResource):
+                # Number tokens are added later via place_number_discs()
                 resourceList.append(Resource(r, None))
 
         return resourceList
@@ -122,6 +123,31 @@ class catanBoard(hexTile, Vertex):
 
         #Return true if it legal for all hexes
         return True
+
+    def place_number_discs(self):
+        """Assign dice numbers following the official A-B-C spiral order.
+
+        ``abc_order`` lists board indices beginning at the upper left hex
+        and moving clockwise around the outer ring before spiraling inward.
+        Each non-desert hex receives the next number from ``NumberList`` in
+        sequence."""
+
+        # Board index order corresponding to letters A-R
+        abc_order = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+                     6, 5, 4, 3, 2, 1, 0]
+
+        # Randomised stack of number tokens (18 discs)
+        NumberList = np.random.permutation(
+            [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9,
+             9, 10, 10, 11, 11, 12])
+        num_idx = 0
+
+        for hex_index in abc_order:
+            tile = self.hexTileDict[hex_index]
+            if tile.resource.type == 'DESERT':
+                continue
+            tile.resource = Resource(tile.resource.type, NumberList[num_idx])
+            num_idx += 1
 
 
     #Function to generate the entire board graph
