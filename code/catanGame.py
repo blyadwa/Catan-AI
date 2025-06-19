@@ -202,35 +202,54 @@ class catanGame():
         if(diceRoll != 7): #Collect resources if not a 7
             #First get the hex or hexes corresponding to diceRoll
             hexResourcesRolled = self.board.getHexResourceRolled(diceRoll)
-            #print('Resources rolled this turn:', hexResourcesRolled)
 
-            #Check for each player
+            # Track resource demand for each player
+            demand = {}
             for player_i in list(self.playerQueue.queue):
+                demand[player_i] = {r: 0 for r in self.board.resourceBank.keys()}
+
                 #Check each settlement the player has
                 for settlementCoord in player_i.buildGraph['SETTLEMENTS']:
-                    for adjacentHex in self.board.boardGraph[settlementCoord].adjacentHexList: #check each adjacent hex to a settlement
-                        if(adjacentHex in hexResourcesRolled and self.board.hexTileDict[adjacentHex].robber == False): #This player gets a resource if hex is adjacent and no robber
+                    for adjacentHex in self.board.boardGraph[settlementCoord].adjacentHexList:
+                        if(adjacentHex in hexResourcesRolled and self.board.hexTileDict[adjacentHex].robber == False):
                             resourceGenerated = self.board.hexTileDict[adjacentHex].resource.type
-                            if self.board.withdraw_resource(resourceGenerated):
-                                player_i.resources[resourceGenerated] += 1
-                                print("{} collects 1 {} from Settlement".format(player_i.name, resourceGenerated))
-                
+                            demand[player_i][resourceGenerated] += 1
+
                 #Check each City the player has
                 for cityCoord in player_i.buildGraph['CITIES']:
-                    for adjacentHex in self.board.boardGraph[cityCoord].adjacentHexList: #check each adjacent hex to a settlement
-                        if(adjacentHex in hexResourcesRolled and self.board.hexTileDict[adjacentHex].robber == False): #This player gets a resource if hex is adjacent and no robber
+                    for adjacentHex in self.board.boardGraph[cityCoord].adjacentHexList:
+                        if(adjacentHex in hexResourcesRolled and self.board.hexTileDict[adjacentHex].robber == False):
                             resourceGenerated = self.board.hexTileDict[adjacentHex].resource.type
-                            gained = 0
-                            for _ in range(2):
-                                if self.board.withdraw_resource(resourceGenerated):
-                                    player_i.resources[resourceGenerated] += 1
-                                    gained += 1
-                            if gained:
-                                print("{} collects {} {} from City".format(player_i.name, gained, resourceGenerated))
+                            demand[player_i][resourceGenerated] += 2
+
+            # Allocate resources based on bank supply
+            allocation = {p: {r: 0 for r in self.board.resourceBank.keys()} for p in demand}
+            for resource in self.board.resourceBank.keys():
+                total_demand = sum(d[resource] for d in demand.values())
+                if total_demand == 0:
+                    continue
+                players_requesting = [p for p in demand if demand[p][resource] > 0]
+                supply = self.board.resourceBank[resource]
+
+                if supply >= total_demand:
+                    for p in players_requesting:
+                        allocation[p][resource] = demand[p][resource]
+                    self.board.withdraw_resource(resource, total_demand)
+                elif len(players_requesting) == 1 and supply > 0:
+                    p = players_requesting[0]
+                    allocation[p][resource] = min(supply, demand[p][resource])
+                    self.board.withdraw_resource(resource, allocation[p][resource])
+                # If supply is insufficient and more than one player wants it,
+                # nobody gets any. No withdrawal in this case.
+
+            # Give players their allocated resources
+            for player_i in list(self.playerQueue.queue):
+                for resource, qty in allocation[player_i].items():
+                    if qty:
+                        player_i.resources[resource] += qty
+                        print("{} collects {} {}".format(player_i.name, qty, resource))
 
                 print("Player:{}, Resources:{}, Points: {}".format(player_i.name, player_i.resources, player_i.victoryPoints))
-                #print('Dev Cards:{}'.format(player_i.devCards))
-                #print("RoadsLeft:{}, SettlementsLeft:{}, CitiesLeft:{}".format(player_i.roadsLeft, player_i.settlementsLeft, player_i.citiesLeft))
                 print('MaxRoadLength:{}, LongestRoad:{}\n'.format(player_i.maxRoadLength, player_i.longestRoadFlag))
         
         #Logic for a 7 roll
@@ -407,15 +426,21 @@ class catanGame():
 
                                 #Check if player wants to trade with the bank
                                 if(self.boardView.tradeBank_button.collidepoint(e.pos)):
+                                    if(diceRolled == True):
                                         currPlayer.initiate_trade(self, 'BANK')
-                                        #Show updated points and resources  
+                                        #Show updated points and resources
                                         print("Player:{}, Resources:{}, Points: {}".format(currPlayer.name, currPlayer.resources, currPlayer.victoryPoints))
+                                    else:
+                                        print("You must roll the dice before trading with the bank.")
                                 
                                 #Check if player wants to trade with another player
                                 if(self.boardView.tradePlayers_button.collidepoint(e.pos)):
+                                    if(diceRolled == True):
                                         currPlayer.initiate_trade(self, 'PLAYER')
-                                        #Show updated points and resources  
+                                        #Show updated points and resources
                                         print("Player:{}, Resources:{}, Points: {}".format(currPlayer.name, currPlayer.resources, currPlayer.victoryPoints))
+                                    else:
+                                        print("You must roll the dice before trading with other players.")
 
                                 #Check if player wants to end turn
                                 if(self.boardView.endTurn_button.collidepoint(e.pos)):
