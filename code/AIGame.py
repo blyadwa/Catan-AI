@@ -66,8 +66,8 @@ class catanAIGame():
         playerList = list(self.playerQueue.queue)
 
         #Build Settlements and roads of each player forwards
-        for player_i in playerList: 
-            player_i.initial_setup(self.board)
+        for player_i in playerList:
+            player_i.initial_setup(self.board, self)
             pygame.event.pump()
             self.boardView.displayGameScreen()
             pygame.time.delay(1000)
@@ -75,8 +75,8 @@ class catanAIGame():
 
         #Build Settlements and roads of each player reverse
         playerList.reverse()
-        for player_i in playerList: 
-            player_i.initial_setup(self.board)
+        for player_i in playerList:
+            player_i.initial_setup(self.board, self)
             pygame.event.pump()
             self.boardView.displayGameScreen()
             pygame.time.delay(1000)
@@ -160,10 +160,12 @@ class catanAIGame():
                     if(p.longestRoadFlag):
                         p.longestRoadFlag = False
                         p.victoryPoints -= 2
+                        p.update_visible_vp()
                         prevPlayer = 'from Player ' + p.name
     
                 player_i.longestRoadFlag = True
                 player_i.victoryPoints += 2
+                player_i.update_visible_vp()
 
                 print("Player {} takes Longest Road {}".format(player_i.name, prevPlayer))
 
@@ -182,10 +184,12 @@ class catanAIGame():
                     if(p.largestArmyFlag):
                         p.largestArmyFlag = False
                         p.victoryPoints -= 2
+                        p.update_visible_vp()
                         prevPlayer = 'from Player ' + p.name
     
                 player_i.largestArmyFlag = True
                 player_i.victoryPoints += 2
+                player_i.update_visible_vp()
 
                 print("Player {} takes Largest Army {}".format(player_i.name, prevPlayer))
 
@@ -222,7 +226,7 @@ class catanAIGame():
                     self.diceStats[diceNum] += 1
                     self.diceStats_list.append(diceNum)
 
-                    currPlayer.move(self.board) #AI Player makes all its moves
+                    currPlayer.move(self.board, self) #AI Player makes all its moves
                     #Check if AI player gets longest road and update Victory points
                     self.check_longest_road(currPlayer)
                     print("Player:{}, Resources:{}, Points: {}".format(currPlayer.name, currPlayer.resources, currPlayer.victoryPoints))

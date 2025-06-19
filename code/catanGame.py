@@ -49,16 +49,24 @@ class catanGame():
 
     #Function to initialize players + build initial settlements for players
     def build_initial_settlements(self):
-        #Initialize new players with names and colors
+        #Initialize new players with names and colors. Ask whether each
+        #participant is human or AI and only create AI players when selected.
         playerColors = ['black', 'darkslateblue', 'magenta4', 'orange1']
-        for i in range(self.numPlayers -1):
-            playerNameInput = input("Enter Player {} name: ".format(i+1))
-            newPlayer = player(playerNameInput, playerColors[i])
-            self.playerQueue.put(newPlayer)
+        for i in range(self.numPlayers):
+            playerName = input("Enter Player {} name: ".format(i + 1))
+            ai_choice = ''
+            while ai_choice.lower() not in ['y', 'n']:
+                ai_choice = input(
+                    "Is {} an AI player? (y/n): ".format(playerName)
+                ).strip().lower()
 
-        test_AI_player = heuristicAIPlayer('Random-Greedy-AI', playerColors[i+1]) #Add the AI Player last
-        test_AI_player.updateAI()
-        self.playerQueue.put(test_AI_player)
+            if ai_choice == 'y':
+                new_player = heuristicAIPlayer(playerName, playerColors[i])
+                new_player.updateAI()
+            else:
+                new_player = player(playerName, playerColors[i])
+
+            self.playerQueue.put(new_player)
 
         playerList = list(self.playerQueue.queue)
 
@@ -68,7 +76,7 @@ class catanGame():
         #Build Settlements and roads of each player forwards
         for player_i in playerList: 
             if(player_i.isAI):
-                player_i.initial_setup(self.board)
+                player_i.initial_setup(self.board, self)
             
             else:
                 self.build(player_i, 'SETTLE')
@@ -81,7 +89,7 @@ class catanGame():
         playerList.reverse()
         for player_i in playerList: 
             if(player_i.isAI):
-                player_i.initial_setup(self.board)
+                player_i.initial_setup(self.board, self)
                 self.boardView.displayGameScreen()
 
             else:
@@ -105,7 +113,7 @@ class catanGame():
 
 
     #Generic function to handle all building in the game - interface with gameView
-    def build(self, player, build_flag):
+    def build(self, player, build_flag, free=False):
         if(build_flag == 'ROAD'): #Show screen with potential roads
             if(self.gameSetup):
                 potentialRoadDict = self.board.get_setup_roads(player)
@@ -115,7 +123,7 @@ class catanGame():
             roadToBuild = self.boardView.buildRoad_display(player, potentialRoadDict)
             if(roadToBuild != None):
                 player.build_road(roadToBuild[0], roadToBuild[1], self.board,
-                                 free=self.gameSetup)
+                                 free=(self.gameSetup or free))
 
             
         if(build_flag == 'SETTLE'): #Show screen with potential settlements
@@ -126,14 +134,20 @@ class catanGame():
             
             vertexSettlement = self.boardView.buildSettlement_display(player, potentialVertexDict)
             if(vertexSettlement != None):
-                player.build_settlement(vertexSettlement, self.board,
-                                       free=self.gameSetup)
+                built = player.build_settlement(vertexSettlement, self.board,
+                                               free=(self.gameSetup or free))
+                if built:
+                    for p in list(self.playerQueue.queue):
+                        self.check_longest_road(p)
 
         if(build_flag == 'CITY'): 
             potentialCityVertexDict = self.board.get_potential_cities(player)
             vertexCity = self.boardView.buildSettlement_display(player, potentialCityVertexDict)
             if(vertexCity != None):
-                player.build_city(vertexCity, self.board) 
+                built = player.build_city(vertexCity, self.board)
+                if built:
+                    for p in list(self.playerQueue.queue):
+                        self.check_longest_road(p)
 
 
     #Wrapper Function to handle robber functionality
@@ -226,10 +240,12 @@ class catanGame():
                     if(p.longestRoadFlag):
                         p.longestRoadFlag = False
                         p.victoryPoints -= 2
+                        p.update_visible_vp()
                         prevPlayer = 'from Player ' + p.name
     
                 player_i.longestRoadFlag = True
                 player_i.victoryPoints += 2
+                player_i.update_visible_vp()
 
                 print("Player {} takes Longest Road {}".format(player_i.name, prevPlayer))
 
@@ -248,10 +264,12 @@ class catanGame():
                     if(p.largestArmyFlag):
                         p.largestArmyFlag = False
                         p.victoryPoints -= 2
+                        p.update_visible_vp()
                         prevPlayer = 'from Player ' + p.name
     
                 player_i.largestArmyFlag = True
                 player_i.victoryPoints += 2
+                player_i.update_visible_vp()
 
                 print("Player {} takes Largest Army {}".format(player_i.name, prevPlayer))
 
@@ -285,7 +303,7 @@ class catanGame():
                         diceRolled = True
                         self.update_playerResources(diceNum, currPlayer)
 
-                        currPlayer.move(self.board) #AI Player makes all its moves
+                        currPlayer.move(self.board, self) #AI Player makes all its moves
                         #Check if AI player gets longest road/largest army and update Victory points
                         self.check_longest_road(currPlayer)
                         self.check_largest_army(currPlayer)

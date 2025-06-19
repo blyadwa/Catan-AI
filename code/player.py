@@ -40,6 +40,10 @@ class player():
         self.devCards = {'KNIGHT':0, 'VP':0, 'MONOPOLY':0, 'ROADBUILDER':0, 'YEAROFPLENTY':0} 
         self.devCardPlayedThisTurn = False
 
+        self.update_visible_vp()
+
+    def update_visible_vp(self):
+        """Recalculate visibleVictoryPoints based on hidden VP cards."""
         self.visibleVictoryPoints = self.victoryPoints - self.devCards['VP']
 
 
@@ -103,9 +107,11 @@ class player():
                     board.deposit_resource('WHEAT')
                 
                 self.victoryPoints += 1
+                self.update_visible_vp()
                 board.updateBoardGraph_settlement(vCoord, self) #update the overall boardGraph
 
                 print('{} Built a Settlement'.format(self.name))
+                return True
                 
                  #Add port to players port list if it is a new port
                 if((board.boardGraph[vCoord].port != False) and (board.boardGraph[vCoord].port not in self.portList)):
@@ -114,9 +120,11 @@ class player():
 
             else:
                 print("No settlements available to build")
+                return False
   
         else:
             print("Insufficient Resources to Build Settlement. Build Cost: 1 BRICK, 1 WOOD, 1 WHEAT, 1 SHEEP")
+        return False
 
     #function to build a city on vertex v
     def build_city(self, vCoord, board):
@@ -133,15 +141,19 @@ class player():
                 board.deposit_resource('ORE', 3)
                 board.deposit_resource('WHEAT', 2)
                 self.victoryPoints += 1
+                self.update_visible_vp()
 
                 board.updateBoardGraph_city(vCoord, self) #update the overall boardGraph
                 print('{} Built a City'.format(self.name))
+                return True
 
             else:
                 print("No cities available to build")
+                return False
 
         else:
             print("Insufficient Resources to Build City. Build Cost: 3 ORE, 2 WHEAT")
+        return False
     
     #function to move robber to a specific hex and steal from a player
     def move_robber(self, hexIndex, board, player_robbed):
@@ -295,7 +307,7 @@ class player():
                 self.victoryPoints += 1
                 board.devCardStack[cardDrawn] -= 1
                 self.devCards[cardDrawn] += 1
-                self.visibleVictoryPoints = self.victoryPoints - self.devCards['VP']
+                self.update_visible_vp()
             
             else:#Update player dev card and the stack
                 self.newDevCards.append(cardDrawn)
@@ -356,9 +368,9 @@ class player():
             self.knightsPlayed += 1 
 
         if(devCardPlayed == 'ROADBUILDER'):
-            game.build(self, 'ROAD')
+            game.build(self, 'ROAD', free=True)
             game.boardView.displayGameScreen()
-            game.build(self, 'ROAD')
+            game.build(self, 'ROAD', free=True)
             game.boardView.displayGameScreen()
 
         #Resource List for Year of Plenty and Monopoly
