@@ -8,9 +8,7 @@ from hexLib import *
 from player import *
 #import networkx as nx
 #import matplotlib.pyplot as plt
-import pygame
 
-pygame.init()
 
 #Class to implement Catan board logic
 #Use a graph representation for the board
