@@ -170,16 +170,22 @@ class catanGame():
                     for adjacentHex in self.board.boardGraph[settlementCoord].adjacentHexList: #check each adjacent hex to a settlement
                         if(adjacentHex in hexResourcesRolled and self.board.hexTileDict[adjacentHex].robber == False): #This player gets a resource if hex is adjacent and no robber
                             resourceGenerated = self.board.hexTileDict[adjacentHex].resource.type
-                            player_i.resources[resourceGenerated] += 1
-                            print("{} collects 1 {} from Settlement".format(player_i.name, resourceGenerated))
+                            if self.board.withdraw_resource(resourceGenerated):
+                                player_i.resources[resourceGenerated] += 1
+                                print("{} collects 1 {} from Settlement".format(player_i.name, resourceGenerated))
                 
                 #Check each City the player has
                 for cityCoord in player_i.buildGraph['CITIES']:
                     for adjacentHex in self.board.boardGraph[cityCoord].adjacentHexList: #check each adjacent hex to a settlement
                         if(adjacentHex in hexResourcesRolled and self.board.hexTileDict[adjacentHex].robber == False): #This player gets a resource if hex is adjacent and no robber
                             resourceGenerated = self.board.hexTileDict[adjacentHex].resource.type
-                            player_i.resources[resourceGenerated] += 2
-                            print("{} collects 2 {} from City".format(player_i.name, resourceGenerated))
+                            gained = 0
+                            for _ in range(2):
+                                if self.board.withdraw_resource(resourceGenerated):
+                                    player_i.resources[resourceGenerated] += 1
+                                    gained += 1
+                            if gained:
+                                print("{} collects {} {} from City".format(player_i.name, gained, resourceGenerated))
 
                 print("Player:{}, Resources:{}, Points: {}".format(player_i.name, player_i.resources, player_i.victoryPoints))
                 #print('Dev Cards:{}'.format(player_i.devCards))
@@ -188,15 +194,13 @@ class catanGame():
         
         #Logic for a 7 roll
         else:
-            #Implement discarding cards
-            #Check for each player
+            #Implement discarding cards for each player
             for player_i in list(self.playerQueue.queue):
-                if(currentPlayer.isAI):
+                if player_i.isAI:
                     print("AI discarding resources...")
-                    #TO-DO
+                    player_i.heuristic_discard(self.board)
                 else:
-                    #Player must discard resources
-                    player_i.discardResources()
+                    player_i.discardResources(self.board)
 
             #Logic for robber
             if(currentPlayer.isAI):
@@ -398,5 +402,6 @@ class catanGame():
                 
 
 #Initialize new game and run
-newGame = catanGame()
-newGame.playCatan()
+if __name__ == '__main__':
+    newGame = catanGame()
+    newGame.playCatan()

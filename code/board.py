@@ -63,8 +63,11 @@ class catanBoard(hexTile, Vertex):
 
         self.updatePorts() #Add the ports to the graph
 
-        #Initialize DevCardStack
-        self.devCardStack = {'KNIGHT':15, 'VP':5, 'MONOPOLY':2, 'ROADBUILDER':2, 'YEAROFPLENTY':2}
+        #Initialize Development Card stack (14 knights in the deck)
+        self.devCardStack = {'KNIGHT':14, 'VP':5, 'MONOPOLY':2, 'ROADBUILDER':2, 'YEAROFPLENTY':2}
+
+        #Resource bank starts with 19 of each resource
+        self.resourceBank = {'ORE':19, 'BRICK':19, 'WHEAT':19, 'WOOD':19, 'SHEEP':19}
 
         return None
 
@@ -207,16 +210,24 @@ class catanBoard(hexTile, Vertex):
     #Return these roads as a dictionary where key=vertex coordinates and values is the rect
     def get_potential_roads(self, player):
         colonisableRoads = {}
-        #Check potential roads from each road the player already has
-        for existingRoad in player.buildGraph['ROADS']:
-            for vertex_i in existingRoad: #Iterate over both vertices of this road
-                #Check neighbors from this vertex
-                for indx, v_i in enumerate(self.boardGraph[vertex_i].edgeList):
-                    if((self.boardGraph[vertex_i].edgeState[indx][1] == False) and (self.boardGraph[vertex_i].state['Player'] in [None, player])): #Edge currently does not have a road and vertex isn't colonised by another player
-                        if((v_i, vertex_i) not in colonisableRoads.keys() and (vertex_i, v_i) not in colonisableRoads.keys()): #If the edge isn't already there in both its regular + opposite orientation
-                            #Use boolean to keep track of potential roads
-                            colonisableRoads[(vertex_i, v_i)] = True
-                            #print(vertex_i, v_i)
+
+        #Potential starting vertices come from existing roads and current
+        #settlements/cities owned by the player
+        candidate_vertices = set()
+
+        for road in player.buildGraph['ROADS']:
+            candidate_vertices.update(road)
+
+        candidate_vertices.update(player.buildGraph['SETTLEMENTS'])
+        candidate_vertices.update(player.buildGraph['CITIES'])
+
+        for vertex_i in candidate_vertices:
+            for indx, v_i in enumerate(self.boardGraph[vertex_i].edgeList):
+                if (self.boardGraph[vertex_i].edgeState[indx][1] is False and
+                        self.boardGraph[vertex_i].state['Player'] in [None, player]):
+                    if ((v_i, vertex_i) not in colonisableRoads and
+                            (vertex_i, v_i) not in colonisableRoads):
+                        colonisableRoads[(vertex_i, v_i)] = True
 
         return colonisableRoads
 
@@ -373,3 +384,15 @@ class catanBoard(hexTile, Vertex):
                 hexesRolled.append(hexTile.index)
 
         return hexesRolled
+
+    #Bank management helpers
+    def withdraw_resource(self, resource, qty=1):
+        """Withdraw ``qty`` of ``resource`` from the bank if available."""
+        if self.resourceBank[resource] >= qty:
+            self.resourceBank[resource] -= qty
+            return True
+        return False
+
+    def deposit_resource(self, resource, qty=1):
+        """Return ``qty`` of ``resource`` to the bank."""
+        self.resourceBank[resource] += qty

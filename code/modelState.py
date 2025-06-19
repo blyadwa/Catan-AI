@@ -34,4 +34,3 @@ class modelState():
 
 
 
-a = modelState()

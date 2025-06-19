@@ -60,6 +60,8 @@ class player():
                 if not free:
                     self.resources['BRICK'] -= 1
                     self.resources['WOOD'] -= 1
+                    board.deposit_resource('BRICK')
+                    board.deposit_resource('WOOD')
 
                 board.updateBoardGraph_road(v1, v2, self) #update the overall boardGraph
 
@@ -95,6 +97,10 @@ class player():
                     self.resources['WOOD'] -= 1
                     self.resources['SHEEP'] -= 1
                     self.resources['WHEAT'] -= 1
+                    board.deposit_resource('BRICK')
+                    board.deposit_resource('WOOD')
+                    board.deposit_resource('SHEEP')
+                    board.deposit_resource('WHEAT')
                 
                 self.victoryPoints += 1
                 board.updateBoardGraph_settlement(vCoord, self) #update the overall boardGraph
@@ -124,6 +130,8 @@ class player():
                 #Update player resources
                 self.resources['ORE'] -= 3
                 self.resources['WHEAT'] -= 2
+                board.deposit_resource('ORE', 3)
+                board.deposit_resource('WHEAT', 2)
                 self.victoryPoints += 1
 
                 board.updateBoardGraph_city(vCoord, self) #update the overall boardGraph
@@ -278,6 +286,9 @@ class player():
             self.resources['ORE'] -= 1
             self.resources['WHEAT'] -= 1
             self.resources['SHEEP'] -= 1
+            board.deposit_resource('ORE')
+            board.deposit_resource('WHEAT')
+            board.deposit_resource('SHEEP')
 
             #If card is a victory point apply immediately, else add to new card list
             if(cardDrawn == 'VP'):
@@ -361,8 +372,10 @@ class player():
                 r1 = input("Enter resource 1 name: ").upper()
                 r2 = input("Enter resource 2 name: ").upper()
 
-            self.resources[r1] += 1
-            self.resources[r2] += 1
+            if game.board.withdraw_resource(r1):
+                self.resources[r1] += 1
+            if game.board.withdraw_resource(r2):
+                self.resources[r2] += 1
 
         if(devCardPlayed == 'MONOPOLY'):
             print("Resources to Monopolize:", resource_list)
@@ -382,7 +395,7 @@ class player():
 
 
     #Function to basic trade 4:1 with bank, or use ports to trade
-    def trade_with_bank(self, r1, r2):
+    def trade_with_bank(self, r1, r2, board):
         '''Function to implement trading with bank
         r1: resource player wants to trade away
         r2: resource player wants to receive
@@ -391,21 +404,33 @@ class player():
         #Get r1 port string
         r1_port = "2:1 " + r1
         if(r1_port in self.portList and self.resources[r1] >= 2): #Can use 2:1 port with r1
+            if not board.withdraw_resource(r2):
+                print("Bank lacks {} to trade".format(r2))
+                return
             self.resources[r1] -= 2
+            board.deposit_resource(r1, 2)
             self.resources[r2] += 1
             print("Traded 2 {} for 1 {} using {} Port".format(r1, r2, r1))
             return
 
         #Check for 3:1 Port
         elif('3:1 PORT' in self.portList and self.resources[r1] >= 3):
+            if not board.withdraw_resource(r2):
+                print("Bank lacks {} to trade".format(r2))
+                return
             self.resources[r1] -= 3
+            board.deposit_resource(r1, 3)
             self.resources[r2] += 1
             print("Traded 3 {} for 1 {} using 3:1 Port".format(r1, r2))
             return
 
         #Check 4:1 port
         elif(self.resources[r1] >= 4):
+            if not board.withdraw_resource(r2):
+                print("Bank lacks {} to trade".format(r2))
+                return
             self.resources[r1] -= 4
+            board.deposit_resource(r1, 4)
             self.resources[r2] += 1
             print("Traded 4 {} for 1 {}".format(r1, r2))
             return
@@ -438,7 +463,7 @@ class player():
 
             #Try and trade with Bank
             #Note: Ports and Error handling handled in trade with bank function
-            self.trade_with_bank(resourceToTrade, resourceToReceive) 
+            self.trade_with_bank(resourceToTrade, resourceToReceive, game.board)
             
             return
 
@@ -509,7 +534,7 @@ class player():
 
 
     #Function to discard cards
-    def discardResources(self):
+    def discardResources(self, board):
         '''Function to enable a player to select cards to discard when a 7 is rolled
         '''
         maxCards = 7 #Default is 7, but can be changed for testing
@@ -526,7 +551,7 @@ class player():
             
             #Loop to allow player to discard cards
             for i in range(numCardsToDiscard):
-                print("Player {} current resources to choose from:", self.resources)
+                print("Player {} current resources to choose from: {}".format(self.name, self.resources))
                 
                 resourceToDiscard = ''
                 while (resourceToDiscard not in self.resources.keys()) or (self.resources[resourceToDiscard] == 0):
@@ -534,6 +559,7 @@ class player():
 
                 #Discard that resource
                 self.resources[resourceToDiscard] -= 1
+                board.deposit_resource(resourceToDiscard)
                 print("Player {} discarded a {}, and needs to discard {} more cards".format(self.name, resourceToDiscard, (numCardsToDiscard-1-i)))
 
 
