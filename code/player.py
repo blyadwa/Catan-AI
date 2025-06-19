@@ -414,8 +414,12 @@ class player():
         '''Function to implement trading with bank
         r1: resource player wants to trade away
         r2: resource player wants to receive
-        Automatically give player the best available trade ratio
+        Automatically give player the best available trade ratio.
+        ``r1`` and ``r2`` must be different.
         '''
+        if r1 == r2:
+            print("Cannot trade {} for itself".format(r1))
+            return
         #Get r1 port string
         r1_port = "2:1 " + r1
         if(r1_port in self.portList and self.resources[r1] >= 2): #Can use 2:1 port with r1
