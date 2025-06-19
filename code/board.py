@@ -125,23 +125,27 @@ class catanBoard(hexTile, Vertex):
         return True
 
     def place_number_discs(self):
-        """Assign dice numbers following the official A-B-C spiral order.
+        """Place number tokens using the official spiral procedure.
 
-        ``abc_order`` lists board indices beginning at the upper left hex
-        and moving clockwise around the outer ring before spiraling inward.
-        Each non-desert hex receives the next number from ``NumberList`` in
-        sequence."""
+        The board indices in ``abc_order`` correspond to the letters ``A``
+        through ``R`` used in the rule book.  Numbers are placed in that
+        order, starting from one of the four corners chosen at random and
+        rotating clockwise.  The desert tile is skipped when encountered."""
 
-        # Board index order corresponding to letters A-R
+        # Board index order matching letters A–R (spiral from the upper left)
         abc_order = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
                      6, 5, 4, 3, 2, 1, 0]
 
-        # Randomised stack of number tokens (18 discs)
-        NumberList = np.random.permutation(
-            [2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9,
-             9, 10, 10, 11, 11, 12])
-        num_idx = 0
+        # Choose a random corner of the board to start (indices of letters A, E, J and N)
+        corner_offsets = [0, 4, 9, 13]
+        start_offset = int(np.random.choice(corner_offsets))
+        abc_order = abc_order[start_offset:] + abc_order[:start_offset]
 
+        # Fixed number sequence for letters A–R
+        NumberList = [5, 2, 6, 3, 8, 10, 9, 12, 11, 4,
+                      8, 10, 9, 4, 5, 6, 3, 11]
+
+        num_idx = 0
         for hex_index in abc_order:
             tile = self.hexTileDict[hex_index]
             if tile.resource.type == 'DESERT':
