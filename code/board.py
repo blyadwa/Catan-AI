@@ -254,7 +254,8 @@ class catanBoard(hexTile, Vertex):
         for vertex_i in candidate_vertices:
             for indx, v_i in enumerate(self.boardGraph[vertex_i].edgeList):
                 if (self.boardGraph[vertex_i].edgeState[indx][1] is False and
-                        self.boardGraph[vertex_i].state['Player'] in [None, player]):
+                        self.boardGraph[vertex_i].state['Player'] in [None, player] and
+                        self.boardGraph[v_i].state['Player'] in [None, player]):
                     if ((v_i, vertex_i) not in colonisableRoads and
                             (vertex_i, v_i) not in colonisableRoads):
                         colonisableRoads[(vertex_i, v_i)] = True
