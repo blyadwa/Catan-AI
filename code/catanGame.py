@@ -103,9 +103,12 @@ class catanGame():
             #check each adjacent hex to latest settlement
             for adjacentHex in self.board.boardGraph[player_i.buildGraph['SETTLEMENTS'][-1]].adjacentHexList:
                 resourceGenerated = self.board.hexTileDict[adjacentHex].resource.type
-                if(resourceGenerated != 'DESERT'):
+                if resourceGenerated != 'DESERT':
+                    self.board.withdraw_resource(resourceGenerated)
                     player_i.resources[resourceGenerated] += 1
-                    print("{} collects 1 {} from Settlement".format(player_i.name, resourceGenerated))
+                    print(
+                        "{} collects 1 {} from Settlement".format(
+                            player_i.name, resourceGenerated))
 
         self.gameSetup = False
 

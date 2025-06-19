@@ -111,12 +111,15 @@ class player():
                 board.updateBoardGraph_settlement(vCoord, self) #update the overall boardGraph
 
                 print('{} Built a Settlement'.format(self.name))
-                return True
-                
-                 #Add port to players port list if it is a new port
-                if((board.boardGraph[vCoord].port != False) and (board.boardGraph[vCoord].port not in self.portList)):
+
+                # Add port to player's port list if it is a new port
+                if (board.boardGraph[vCoord].port and
+                        board.boardGraph[vCoord].port not in self.portList):
                     self.portList.append(board.boardGraph[vCoord].port)
-                    print("{} now has {} Port access".format(self.name, board.boardGraph[vCoord].port))
+                    print("{} now has {} Port access".format(
+                        self.name, board.boardGraph[vCoord].port))
+
+                return True
 
             else:
                 print("No settlements available to build")
@@ -172,10 +175,14 @@ class player():
             print("No Player on this hex to Rob")
             return
         
-        #Get all resources player 2 has in a list and use random list index to steal
+        # Get all resources player 2 has in a list and use random list index to steal
         p2_resources = []
         for resourceName, resourceAmount in player_2.resources.items():
-            p2_resources += [resourceName]*resourceAmount
+            p2_resources += [resourceName] * resourceAmount
+
+        if not p2_resources:
+            print("Player {} has no resources to steal".format(player_2.name))
+            return
 
         resourceIndexToSteal = np.random.randint(0, len(p2_resources))
 
