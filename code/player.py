@@ -18,7 +18,9 @@ class player():
         self.settlementsLeft = 5
         self.roadsLeft = 15
         self.citiesLeft = 4
-        self.resources = {'ORE':5, 'BRICK':6, 'WHEAT':3, 'WOOD':6, 'SHEEP':3} #Dictionary that keeps track of resource amounts
+        #Resource pool for the player. Players begin with no resources and gain
+        #their starting cards after the initial settlement placement phase.
+        self.resources = {'ORE':0, 'BRICK':0, 'WHEAT':0, 'WOOD':0, 'SHEEP':0}
 
         self.knightsPlayed = 0
         self.largestArmyFlag = False
@@ -42,17 +44,22 @@ class player():
 
 
     #function to build a road from vertex v1 to vertex v2
-    def build_road(self, v1, v2, board):
-        'Update buildGraph to add a road on edge v1 - v2'
+    def build_road(self, v1, v2, board, free=False):
+        """Add a road on edge ``v1``-``v2``.
 
-        if(self.resources['BRICK'] > 0 and self.resources['WOOD'] > 0): #Check if player has resources available
-            if(self.roadsLeft > 0): #Check if player has roads left
-                self.buildGraph['ROADS'].append((v1,v2))
+        When ``free`` is ``True`` (during the initial setup phase) no
+        resource check or deduction is performed.
+        """
+
+        if free or (self.resources['BRICK'] > 0 and self.resources['WOOD'] > 0):
+            if self.roadsLeft > 0:  # Check if player has roads left
+                self.buildGraph['ROADS'].append((v1, v2))
                 self.roadsLeft -= 1
 
-                #Update player resources
-                self.resources['BRICK'] -= 1
-                self.resources['WOOD'] -= 1
+                #Update player resources only when not building for free
+                if not free:
+                    self.resources['BRICK'] -= 1
+                    self.resources['WOOD'] -= 1
 
                 board.updateBoardGraph_road(v1, v2, self) #update the overall boardGraph
 
@@ -70,22 +77,24 @@ class player():
 
 
     #function to build a settlement on vertex with coordinates vCoord
-    def build_settlement(self, vCoord, board):
-        'Update player buildGraph and boardgraph to add a settlement on vertex v'
-        #Take input from Player on where to build settlement
-            #Check if player has correct resources
-                #Update player resources and boardGraph with transaction
+    def build_settlement(self, vCoord, board, free=False):
+        """Place a settlement on ``vCoord``.
 
-        if(self.resources['BRICK'] > 0 and self.resources['WOOD'] > 0 and self.resources['SHEEP'] > 0 and self.resources['WHEAT'] > 0): #Check if player has resources available
-            if(self.settlementsLeft > 0): #Check if player has settlements left
+        If ``free`` is ``True`` the placement does not cost any resources.
+        """
+
+        if free or (self.resources['BRICK'] > 0 and self.resources['WOOD'] > 0 and
+                     self.resources['SHEEP'] > 0 and self.resources['WHEAT'] > 0):
+            if self.settlementsLeft > 0:
                 self.buildGraph['SETTLEMENTS'].append(vCoord)
                 self.settlementsLeft -= 1
 
                 #Update player resources
-                self.resources['BRICK'] -= 1
-                self.resources['WOOD'] -= 1
-                self.resources['SHEEP'] -= 1
-                self.resources['WHEAT'] -= 1
+                if not free:
+                    self.resources['BRICK'] -= 1
+                    self.resources['WOOD'] -= 1
+                    self.resources['SHEEP'] -= 1
+                    self.resources['WHEAT'] -= 1
                 
                 self.victoryPoints += 1
                 board.updateBoardGraph_settlement(vCoord, self) #update the overall boardGraph
