@@ -277,10 +277,6 @@ class player():
         return newNeighbors
 
         
-    #function to end turn
-    def end_turn():
-        'Pass turn to next player and update game state'
-
     #function to draw a Development Card
     def draw_devCard(self, board):
         'Draw a random dev card from stack and update self.devcards'
@@ -525,7 +521,7 @@ class player():
                 resourceToReceive = input("Enter resource name to receive from player {}:".format(playerToTrade_name)).upper()
                 #Reset if invalid resource is chosen
                 if resourceToReceive in self.resources.keys() and playerToTrade.resources[resourceToReceive] == 0:
-                    resourceToReceive = -""
+                    resourceToReceive = ""
                     print("Player {} doesn't have any {} to trade".format(playerToTrade_name, resourceToReceive))
 
             #Specify quantity to receive
