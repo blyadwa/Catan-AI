@@ -126,9 +126,13 @@ class heuristicAIPlayer(player):
         '''
         #Get list of robber spots
         robberHexDict = board.get_robber_spots()
-        
+
+        #Initialize fallback values in case no opponent can be robbed
+        hexToRob_index = None
+        playerToRob_hex = None
+
         #Choose a hexTile with maximum adversary settlements
-        maxHexScore = 0 #Keep only the best hex to rob
+        maxHexScore = -float('inf') #Keep only the best hex to rob
         for hex_ind, hexTile in robberHexDict.items():
             #Extract all 6 vertices of this hexTile
             vertexList = polygon_corners(board.flat, hexTile.hex)
@@ -149,10 +153,15 @@ class heuristicAIPlayer(player):
                 else:
                     pass
 
-            if hexScore >= maxHexScore and playerToRob != None:
+            if hexScore >= maxHexScore and playerToRob is not None:
                 hexToRob_index = hex_ind
                 playerToRob_hex = playerToRob
                 maxHexScore = hexScore
+
+        #If no suitable opponent found, choose a random hex and don't rob
+        if hexToRob_index is None:
+            hexToRob_index = np.random.choice(list(robberHexDict.keys()))
+            return hexToRob_index, None
 
         return hexToRob_index, playerToRob_hex
 
@@ -165,7 +174,9 @@ class heuristicAIPlayer(player):
         #Get the best hex and player to rob
         hex_i, playerRobbed = self.choose_player_to_rob(board)
 
-        #Move the robber
+        #Move the robber, printing a message if no player was robbed
+        if playerRobbed is None:
+            print("No suitable opponent found. Robber moved without stealing")
         self.move_robber(hex_i, board, playerRobbed)
 
         return
