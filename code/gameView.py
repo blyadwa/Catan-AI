@@ -359,5 +359,167 @@ class catanGameView():
             for e in pygame.event.get(): 
                 if(e.type == pygame.MOUSEBUTTONDOWN): #Exit this loop on mouseclick
                     for playerToRob, playerCircleRect in possiblePlayerDict.items():
-                        if(playerCircleRect.collidepoint(e.pos)): 
+                        if(playerCircleRect.collidepoint(e.pos)):
                             return playerToRob
+
+    # ------------------------- Trading Screens -------------------------
+    def trade_bank_display(self, player):
+        """Display screen to select resources for trading with the bank.
+
+        Returns a tuple ``(resource_give, resource_get)`` or ``None`` if
+        the trade was cancelled.
+        """
+        self.displayGameScreen()
+
+        resources = ['BRICK', 'WOOD', 'WHEAT', 'SHEEP', 'ORE']
+        colorDict_RGB = {
+            'BRICK': (255, 51, 51),
+            'ORE': (128, 128, 128),
+            'WHEAT': (255, 255, 51),
+            'WOOD': (0, 153, 0),
+            'SHEEP': (51, 255, 51),
+        }
+
+        give_rects = {}
+        recv_rects = {}
+
+        give_text = self.font_button.render('Give to Bank', False, (0, 0, 0))
+        recv_text = self.font_button.render('Receive', False, (0, 0, 0))
+        cancel_rect = pygame.Rect(500, 40, 80, 30)
+        cancel_text = self.font_button.render('CANCEL', False, (0, 0, 0))
+
+        for i, r in enumerate(resources):
+            give_rects[r] = pygame.Rect(180 + i * 80, 150, 60, 30)
+            recv_rects[r] = pygame.Rect(180 + i * 80, 250, 60, 30)
+
+        selecting_give = True
+        give_choice = None
+        recv_choice = None
+
+        while True:
+            self.displayGameScreen()
+            self.screen.blit(give_text, (180, 120))
+            self.screen.blit(recv_text, (180, 220))
+            pygame.draw.rect(self.screen, pygame.Color('gray70'), cancel_rect)
+            self.screen.blit(cancel_text, (cancel_rect.x + 5, cancel_rect.y + 5))
+
+            for r, rect in give_rects.items():
+                pygame.draw.rect(self.screen, pygame.Color(*colorDict_RGB[r]), rect)
+                text = self.font_button.render(r, False, (0, 0, 0))
+                self.screen.blit(text, (rect.x + 2, rect.y + 5))
+                if give_choice == r:
+                    pygame.draw.rect(self.screen, pygame.Color('gold'), rect, 3)
+
+            for r, rect in recv_rects.items():
+                pygame.draw.rect(self.screen, pygame.Color(*colorDict_RGB[r]), rect)
+                text = self.font_button.render(r, False, (0, 0, 0))
+                self.screen.blit(text, (rect.x + 2, rect.y + 5))
+                if recv_choice == r:
+                    pygame.draw.rect(self.screen, pygame.Color('gold'), rect, 3)
+
+            pygame.display.update()
+
+            for e in pygame.event.get():
+                if e.type == pygame.MOUSEBUTTONDOWN:
+                    if cancel_rect.collidepoint(e.pos):
+                        return None
+                    if selecting_give:
+                        for r, rect in give_rects.items():
+                            if rect.collidepoint(e.pos):
+                                give_choice = r
+                                selecting_give = False
+                                break
+                    else:
+                        for r, rect in recv_rects.items():
+                            if rect.collidepoint(e.pos) and r != give_choice:
+                                recv_choice = r
+                                return give_choice, recv_choice
+
+    def trade_players_display(self, player, other_players):
+        """Display screen to trade with another player.
+
+        ``other_players`` is a list of player objects available for trade.
+        Returns ``(player_obj, give_resource, receive_resource)`` or ``None`` if
+        cancelled.
+        """
+        if not other_players:
+            return None
+
+        resources = ['BRICK', 'WOOD', 'WHEAT', 'SHEEP', 'ORE']
+        colorDict_RGB = {
+            'BRICK': (255, 51, 51),
+            'ORE': (128, 128, 128),
+            'WHEAT': (255, 255, 51),
+            'WOOD': (0, 153, 0),
+            'SHEEP': (51, 255, 51),
+        }
+
+        player_rects = {}
+        give_rects = {}
+        recv_rects = {}
+
+        cancel_rect = pygame.Rect(500, 40, 80, 30)
+        cancel_text = self.font_button.render('CANCEL', False, (0, 0, 0))
+
+        for i, p in enumerate(other_players):
+            player_rects[p] = pygame.Rect(180 + i * 100, 120, 80, 30)
+
+        for i, r in enumerate(resources):
+            give_rects[r] = pygame.Rect(180 + i * 80, 200, 60, 30)
+            recv_rects[r] = pygame.Rect(180 + i * 80, 300, 60, 30)
+
+        step = 'player'
+        player_choice = None
+        give_choice = None
+        recv_choice = None
+
+        while True:
+            self.displayGameScreen()
+            pygame.draw.rect(self.screen, pygame.Color('gray70'), cancel_rect)
+            self.screen.blit(cancel_text, (cancel_rect.x + 5, cancel_rect.y + 5))
+
+            for p, rect in player_rects.items():
+                pygame.draw.rect(self.screen, pygame.Color('lightblue'), rect)
+                text = self.font_button.render(p.name, False, (0, 0, 0))
+                self.screen.blit(text, (rect.x + 2, rect.y + 5))
+                if player_choice == p:
+                    pygame.draw.rect(self.screen, pygame.Color('gold'), rect, 3)
+
+            for r, rect in give_rects.items():
+                pygame.draw.rect(self.screen, pygame.Color(*colorDict_RGB[r]), rect)
+                text = self.font_button.render(r, False, (0, 0, 0))
+                self.screen.blit(text, (rect.x + 2, rect.y + 5))
+                if give_choice == r:
+                    pygame.draw.rect(self.screen, pygame.Color('gold'), rect, 3)
+
+            for r, rect in recv_rects.items():
+                pygame.draw.rect(self.screen, pygame.Color(*colorDict_RGB[r]), rect)
+                text = self.font_button.render(r, False, (0, 0, 0))
+                self.screen.blit(text, (rect.x + 2, rect.y + 5))
+                if recv_choice == r:
+                    pygame.draw.rect(self.screen, pygame.Color('gold'), rect, 3)
+
+            pygame.display.update()
+
+            for e in pygame.event.get():
+                if e.type == pygame.MOUSEBUTTONDOWN:
+                    if cancel_rect.collidepoint(e.pos):
+                        return None
+                    if step == 'player':
+                        for p, rect in player_rects.items():
+                            if rect.collidepoint(e.pos):
+                                player_choice = p
+                                step = 'give'
+                                break
+                    elif step == 'give':
+                        for r, rect in give_rects.items():
+                            if rect.collidepoint(e.pos):
+                                give_choice = r
+                                step = 'receive'
+                                break
+                    else:
+                        for r, rect in recv_rects.items():
+                            if rect.collidepoint(e.pos) and r != give_choice:
+                                recv_choice = r
+                                return player_choice, give_choice, recv_choice
+
