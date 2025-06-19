@@ -2,10 +2,12 @@
 #Model state class for AI training 
 # TO-DO
 
-from board import *
-from catanGame import *
-from player import *
-from heuristicAIPlayer import *
+"""Model state definitions for AI training."""
+
+# Avoid importing heavy modules at import time so this module can be
+# imported without side effects.
+
+from typing import Any
 
 class modelState():
     '''Define the variables needed by the RL model using a state and action object
@@ -29,8 +31,6 @@ class modelState():
         self.edgeState = [0]
 
         self.actionList = []
-
-        print("Array length", len(self.vertexState))
 
 
 
