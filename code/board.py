@@ -58,6 +58,10 @@ class catanBoard(hexTile, Vertex):
             self.hexTileDict[hexIndex_i] = newHexTile
             hexIndex_i += 1
 
+        # After all tiles are created, populate each tile's neighbor list
+        for tile in self.hexTileDict.values():
+            tile.updateNeighbors(self.hexTileDict)
+
         # Place the number discs following the A-B-C order
         self.place_number_discs()
 

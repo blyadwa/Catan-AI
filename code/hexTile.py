@@ -23,7 +23,30 @@ class hexTile():
         self.robber = False
 
     #Function to update hex neighbors
-    def updateNeighbors(self):  
+    def updateNeighbors(self, board_hexes):
+        """Populate ``neighborList`` with adjacent hex tiles.
+
+        Parameters
+        ----------
+        board_hexes : dict
+            Mapping of ``hexIndex`` to ``hexTile`` for all tiles on the board.
+        """
+
+        neighbors = []
+        # Iterate over the six possible directions around this hex
+        for direction in range(6):
+            n_hex = hex_neighbor(self.hex, direction)
+            n_coord = Axial_Point(n_hex.q, n_hex.r)
+
+            # Find the tile with these axial coordinates, if it exists
+            for tile in board_hexes.values():
+                if tile.index == self.index:
+                    continue
+                if tile.coord == n_coord:
+                    neighbors.append(tile)
+                    break
+
+        self.neighborList = neighbors
         return None
 
 
