@@ -37,14 +37,37 @@ class player():
 
         #Dev cards in possession
         self.newDevCards = [] #List to keep the new dev cards draw - update the main list every turn
-        self.devCards = {'KNIGHT':0, 'VP':0, 'MONOPOLY':0, 'ROADBUILDER':0, 'YEAROFPLENTY':0} 
+        self.devCards = {
+            'KNIGHT': 0,
+            'VP': 0,
+            'MONOPOLY': 0,
+            'ROADBUILDER': 0,
+            'YEAROFPLENTY': 0,
+        }
         self.devCardPlayedThisTurn = False
 
+        # Victory point cards remain hidden until the player reaches
+        # the winning threshold. ``vp_cards_revealed`` keeps track of
+        # whether they have been revealed to other players.
+        self.vp_cards_revealed = False
         self.update_visible_vp()
 
     def update_visible_vp(self):
-        """Recalculate visibleVictoryPoints based on hidden VP cards."""
-        self.visibleVictoryPoints = self.victoryPoints - self.devCards['VP']
+        """Recalculate ``visibleVictoryPoints``.
+
+        When VP dev cards are hidden, other players should only see
+        points that come from board positions or revealed bonuses. Once
+        the player reaches 10 victory points the VP cards are
+        automatically revealed.
+        """
+
+        if self.victoryPoints >= 10:
+            self.vp_cards_revealed = True
+
+        if self.vp_cards_revealed:
+            self.visibleVictoryPoints = self.victoryPoints
+        else:
+            self.visibleVictoryPoints = self.victoryPoints - self.devCards['VP']
 
 
     #function to build a road from vertex v1 to vertex v2
@@ -305,18 +328,18 @@ class player():
             board.deposit_resource('WHEAT')
             board.deposit_resource('SHEEP')
 
-            #If card is a victory point apply immediately, else add to new card list
-            if(cardDrawn == 'VP'):
+            # Apply VP cards immediately but keep them hidden from other players
+            if cardDrawn == 'VP':
                 self.victoryPoints += 1
                 board.devCardStack[cardDrawn] -= 1
                 self.devCards[cardDrawn] += 1
                 self.update_visible_vp()
-            
-            else:#Update player dev card and the stack
+                # Victory point cards are kept secret
+                print(f"{self.name} drew a Development Card")
+            else:  # Add non-VP cards to the player's new-card list
                 self.newDevCards.append(cardDrawn)
                 board.devCardStack[cardDrawn] -= 1
-            
-            print("{} drew a {} from Development Card Stack".format(self.name, cardDrawn))
+                print("{} drew a {} from Development Card Stack".format(self.name, cardDrawn))
 
         else:
             print("Insufficient Resources for Dev Card. Cost: 1 ORE, 1 WHEAT, 1 SHEEP")
@@ -328,6 +351,10 @@ class player():
 
         #Reset the new card list to blank
         self.newDevCards = []
+
+    def get_public_dev_cards(self):
+        """Return development cards excluding hidden VP cards."""
+        return {k: v for k, v in self.devCards.items() if k != 'VP'}
 
     #function to play a development card
     def play_devCard(self, game):
