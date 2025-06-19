@@ -485,6 +485,28 @@ class player():
             print("Insufficient resource {} to trade with Bank".format(r1))
             return
 
+    def trade_with_player(self, other_player, r1, r2):
+        """Execute a simple 1-for-1 trade with ``other_player``.
+
+        ``r1`` is the resource this player gives and ``r2`` is the resource
+        received from ``other_player``.  Returns ``True`` if the trade succeeds.
+        """
+        if self.resources.get(r1, 0) < 1:
+            print(f"Insufficient {r1} to trade with {other_player.name}")
+            return False
+        if other_player.resources.get(r2, 0) < 1:
+            print(f"{other_player.name} lacks {r2} to trade")
+            return False
+
+        self.resources[r1] -= 1
+        self.resources[r2] += 1
+        other_player.resources[r2] -= 1
+        other_player.resources[r1] += 1
+        print(
+            f"{self.name} traded 1 {r1} for 1 {r2} with {other_player.name}"
+        )
+        return True
+
 
     #Function to initate a trade - with bank or other players
     def initiate_trade(self, game, trade_type):

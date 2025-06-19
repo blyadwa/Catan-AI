@@ -494,31 +494,38 @@ class catanGame():
 
                                 #Check if player wants to trade with the bank
                                 if(self.boardView.tradeBank_button.collidepoint(e.pos)):
-                                    if(diceRolled == True):
-                                        currPlayer.initiate_trade(self, 'BANK')
-                                        #Show updated points and resources
-                                        print(
-                                            "Player:{}, Resources:{}, Points: {}".format(
-                                                currPlayer.name,
-                                                currPlayer.resources,
-                                                currPlayer.visibleVictoryPoints,
+                                    if diceRolled:
+                                        choice = self.boardView.trade_bank_display(currPlayer)
+                                        if choice:
+                                            r1, r2 = choice
+                                            currPlayer.trade_with_bank(r1, r2, self.board)
+                                            self.boardView.displayGameScreen()
+                                            print(
+                                                "Player:{}, Resources:{}, Points: {}".format(
+                                                    currPlayer.name,
+                                                    currPlayer.resources,
+                                                    currPlayer.visibleVictoryPoints,
+                                                )
                                             )
-                                        )
                                     else:
                                         print("You must roll the dice before trading with the bank.")
                                 
                                 #Check if player wants to trade with another player
                                 if(self.boardView.tradePlayers_button.collidepoint(e.pos)):
-                                    if(diceRolled == True):
-                                        currPlayer.initiate_trade(self, 'PLAYER')
-                                        #Show updated points and resources
-                                        print(
-                                            "Player:{}, Resources:{}, Points: {}".format(
-                                                currPlayer.name,
-                                                currPlayer.resources,
-                                                currPlayer.visibleVictoryPoints,
+                                    if diceRolled:
+                                        others = [p for p in list(self.playerQueue.queue) if p != currPlayer]
+                                        result = self.boardView.trade_players_display(currPlayer, others)
+                                        if result:
+                                            other_p, r1, r2 = result
+                                            currPlayer.trade_with_player(other_p, r1, r2)
+                                            self.boardView.displayGameScreen()
+                                            print(
+                                                "Player:{}, Resources:{}, Points: {}".format(
+                                                    currPlayer.name,
+                                                    currPlayer.resources,
+                                                    currPlayer.visibleVictoryPoints,
+                                                )
                                             )
-                                        )
                                     else:
                                         print("You must roll the dice before trading with other players.")
 
